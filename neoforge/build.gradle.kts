@@ -4,6 +4,14 @@ val modId = project.property("mod_id") as String
 
 provided("org.jetbrains", "annotations")
 provided("commons-io", "commons-io")
+// Youer provides these on its own classpath - don't bundle them
+provided("net.kyori", "adventure-api")
+provided("net.kyori", "adventure-key")
+provided("net.kyori", "adventure-text-serializer-gson")
+provided("net.kyori", "adventure-text-serializer-json")
+provided("net.kyori", "adventure-text-serializer-legacy")
+provided("net.kyori", "examination-api")
+provided("net.kyori", "examination-string")
 
 architectury {
     platformSetupLoomIde()
@@ -34,6 +42,10 @@ dependencies {
     compileOnly(libs.geyser.api)
 
     shadow(project(path = ":shared", configuration = "transformProductionNeoForge")) { isTransitive = false }
+    shadow(libs.geyser.api) { isTransitive = false } // bundle Geyser API only (no transitive deps)
+    shadow("org.geysermc.api:base-api:1.0.3") { isTransitive = false } // Geyser 2.11 API dependency (org.geysermc.api)
+    shadow("org.geysermc.event:events:1.1-SNAPSHOT") { isTransitive = false } // Geyser 2.11 event bus
+    shadow("org.lanternpowered:lmbda:2.0.0") { isTransitive = false } // LambdaFactory (was provided by Geyser mod)
 
     // TODO fix neoforge runServer task
     modRuntimeOnly(libs.pack.converter)

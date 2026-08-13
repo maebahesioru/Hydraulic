@@ -5,7 +5,9 @@ architectury {
 dependencies {
     compileOnly(libs.mixin)
     compileOnly(libs.mixinextras)
-    compileOnly(libs.geyser.api)
+    implementation(libs.geyser.api) // bundled so Hydraulic can load alongside plugin-based Geyser (Youer)
+    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    compileOnly("net.kyori:examination-api:1.3.0")
     compileOnly(libs.geyser.core) {
         exclude(group = "io.netty")
         exclude(group = "io.netty.incubator")

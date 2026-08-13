@@ -79,6 +79,45 @@ public class PackListener {
             return;
         }
 
+        convertPacks(packsPath, packsToLoad);
+    }
+
+    /**
+     * Converts all mod packs directly, without requiring a Geyser event.
+     * Used on hybrid servers (Youer) where the plugin-based Geyser's event bus
+     * is not reachable from the mod classloader.
+     *
+     * @param packsPath the directory to write converted packs to
+     * @return true if at least one pack was converted
+     */
+    public boolean convertAll(Path packsPath) {
+        Map<String, Pair<ModInfo, Path>> packsToLoad = new HashMap<>();
+        for (ModInfo mod : this.hydraulic.mods()) {
+            if (PackManager.IGNORED_MODS.contains(mod.id())) {
+                continue;
+            }
+
+            // Ignore generated mods
+            if (mod.id().startsWith("generated_")) {
+                continue;
+            }
+
+            Path packPath = packsPath.resolve(mod.id() + ".zip");
+            if (this.hydraulic.isDev() || checkNeedsConversion(mod, packPath)) {
+                packsToLoad.put(mod.id(), Pair.of(mod, packPath));
+            }
+        }
+
+        if (packsToLoad.isEmpty()) {
+            LOGGER.info("No packs to convert!");
+            return false;
+        }
+
+        convertPacks(packsPath, packsToLoad);
+        return true;
+    }
+
+    private void convertPacks(Path packsPath, Map<String, Pair<ModInfo, Path>> packsToLoad) {
         LOGGER.info("Found {} packs to convert!", packsToLoad.size());
 
         long start = System.currentTimeMillis();
@@ -88,9 +127,7 @@ public class PackListener {
             futures.add(CompletableFuture.runAsync(() -> {
                 LOGGER.info("Converting pack for mod {}", entry.getKey());
                 try {
-                    if (this.manager.createPack(entry.getValue().getLeft(), entry.getValue().getRight())) {
-                        event.resourcePacks().add(entry.getValue().getRight());
-                    }
+                    this.manager.createPack(entry.getValue().getLeft(), entry.getValue().getRight());
                 } catch (Throwable t) {
                     LOGGER.error("Failed to convert pack for mod {}", entry.getKey(), t);
                 }

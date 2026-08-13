@@ -3,7 +3,7 @@ plugins {
 }
 
 val platforms = setOf(
-    projects.fabric,
+    // projects.fabric, // disabled for Youer build
     projects.neoforge,
     projects.shared
 ).map { it.dependencyProject }

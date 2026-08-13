@@ -73,5 +73,5 @@ pluginManagement {
 rootProject.name = "hydraulic-parent"
 
 include(":shared")
-include(":fabric")
 include(":neoforge")
+// include(":fabric") // disabled for Youer build (Geyser 2.11.1 target)

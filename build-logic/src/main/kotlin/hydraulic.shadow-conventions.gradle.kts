@@ -29,6 +29,7 @@ tasks {
                 exclude(dependency("org.checkerframework:checker-qual:.*"))
                 exclude(dependency("org.jetbrains:annotations:.*"))
             }
+            sJar.exclude("module-info.class") // avoid duplicate module descriptors from shaded deps
         }
     }
     named("build") {

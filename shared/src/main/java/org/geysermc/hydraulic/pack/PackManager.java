@@ -60,6 +60,7 @@ public class PackManager {
     );
 
     private final HydraulicImpl hydraulic;
+    private PackListener packListener;
     private final List<PackModule<?>> modules = new ArrayList<>();
 
     private final ListMultimap<String, ModInfo> namespacesToMods = MultimapBuilder.hashKeys().arrayListValues(1).build();
@@ -127,7 +128,13 @@ public class PackManager {
             }
         }
 
-        GeyserApi.api().eventBus().register(this.hydraulic, new PackListener(this.hydraulic, this));
+        this.packListener = new PackListener(this.hydraulic, this);
+        GeyserApi.api().eventBus().register(this.hydraulic, this.packListener);
+    }
+
+    @NotNull
+    public PackListener packListener() {
+        return this.packListener;
     }
 
     /**
