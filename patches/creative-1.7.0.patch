@@ -1,0 +1,50 @@
+diff --git a/buildSrc/src/main/kotlin/creative.publishing-conventions.gradle.kts b/buildSrc/src/main/kotlin/creative.publishing-conventions.gradle.kts
+index 5b3913d..69cdbb5 100644
+--- a/buildSrc/src/main/kotlin/creative.publishing-conventions.gradle.kts
++++ b/buildSrc/src/main/kotlin/creative.publishing-conventions.gradle.kts
+@@ -54,5 +54,9 @@ publishing {
+ }
+ 
+ signing {
++    // Local backport builds don't have a signing key; skip signing.
++    if (project.hasProperty("noSigning")) {
++        return@signing
++    }
+     sign(publishing.publications["maven"])
+ }
+\ No newline at end of file
+diff --git a/serializer-minecraft/src/main/java/team/unnamed/creative/serialize/minecraft/atlas/AtlasSourceSerializer.java b/serializer-minecraft/src/main/java/team/unnamed/creative/serialize/minecraft/atlas/AtlasSourceSerializer.java
+index b76e256..f119364 100644
+--- a/serializer-minecraft/src/main/java/team/unnamed/creative/serialize/minecraft/atlas/AtlasSourceSerializer.java
++++ b/serializer-minecraft/src/main/java/team/unnamed/creative/serialize/minecraft/atlas/AtlasSourceSerializer.java
+@@ -165,6 +165,11 @@ final class AtlasSourceSerializer {
+ 
+     static AtlasSource deserialize(JsonObject node) {
+         String type = node.get(TYPE_FIELD).getAsString();
++        // 1.21.4+ writes namespaced atlas source types ("minecraft:single"); strip the namespace
++        // so the type matches the legacy constants below.
++        if (type.startsWith("minecraft:")) {
++            type = type.substring("minecraft:".length());
++        }
+         switch (type) {
+             case SINGLE_TYPE: {
+                 @Subst("minecraft:resource")
+diff --git a/serializer-minecraft/src/main/java/team/unnamed/creative/serialize/minecraft/model/ModelSerializer.java b/serializer-minecraft/src/main/java/team/unnamed/creative/serialize/minecraft/model/ModelSerializer.java
+index be83c38..9fe1f8e 100644
+--- a/serializer-minecraft/src/main/java/team/unnamed/creative/serialize/minecraft/model/ModelSerializer.java
++++ b/serializer-minecraft/src/main/java/team/unnamed/creative/serialize/minecraft/model/ModelSerializer.java
+@@ -149,7 +149,13 @@ public final class ModelSerializer implements JsonResourceSerializer<Model>, Jso
+         if (objectNode.has("display")) {
+             JsonObject displayNode = objectNode.getAsJsonObject("display");
+             for (Map.Entry<String, JsonElement> entry : displayNode.entrySet()) {
+-                ItemTransform.Type type = ItemTransform.Type.valueOf(entry.getKey().toUpperCase(Locale.ROOT));
++                ItemTransform.Type type;
++                try {
++                    type = ItemTransform.Type.valueOf(entry.getKey().toUpperCase(Locale.ROOT));
++                } catch (IllegalArgumentException e) {
++                    // Skip unknown/custom display types (e.g. "twilightforest:jarred")
++                    continue;
++                }
+                 display.put(type, readItemTransform(entry.getValue()));
+             }
+         }

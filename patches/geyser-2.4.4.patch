@@ -1,0 +1,45 @@
+diff --git a/core/src/main/java/org/geysermc/geyser/registry/loader/CollisionRegistryLoader.java b/core/src/main/java/org/geysermc/geyser/registry/loader/CollisionRegistryLoader.java
+index bd98ae0a5..37517270f 100644
+--- a/core/src/main/java/org/geysermc/geyser/registry/loader/CollisionRegistryLoader.java
++++ b/core/src/main/java/org/geysermc/geyser/registry/loader/CollisionRegistryLoader.java
+@@ -88,6 +88,12 @@ public class CollisionRegistryLoader extends MultiResourceRegistryLoader<String,
+                 continue;
+             }
+ 
++            // Custom (non-vanilla) blocks have no entry in the vanilla indices array; skip collision
++            // generation entirely (they get no special collision handling).
++            if (i >= indices.length) {
++                collisions.add(null);
++                continue;
++            }
+             BlockCollision newCollision = instantiateCollision(state, annotationMap, indices[i], collisionList);
+ 
+             if (newCollision != null) {
+diff --git a/core/src/main/java/org/geysermc/geyser/registry/populator/BlockRegistryPopulator.java b/core/src/main/java/org/geysermc/geyser/registry/populator/BlockRegistryPopulator.java
+index b95da4f8f..cf70bd24c 100644
+--- a/core/src/main/java/org/geysermc/geyser/registry/populator/BlockRegistryPopulator.java
++++ b/core/src/main/java/org/geysermc/geyser/registry/populator/BlockRegistryPopulator.java
+@@ -496,7 +496,9 @@ public final class BlockRegistryPopulator {
+ 
+                 BlockRegistries.JAVA_BLOCKS.registerWithAnyIndex(javaBlockState.stateGroupId(), block, Blocks.AIR);
+                 BlockRegistries.JAVA_IDENTIFIER_TO_ID.register(javaId, stateRuntimeId);
+-                BlockRegistries.BLOCK_STATES.register(stateRuntimeId, new BlockState(block, stateRuntimeId));
++                // Hydraulic registers non-vanilla blocks with runtime IDs beyond the vanilla range;
++                // extend the list, filling the gap with the first (air) block state.
++                BlockRegistries.BLOCK_STATES.registerWithAnyIndex(stateRuntimeId, new BlockState(block, stateRuntimeId), BlockRegistries.BLOCK_STATES.get(0));
+             }
+         }
+ 
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index e50809b52..0ace7419f 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -6,7 +6,7 @@ events = "1.1-SNAPSHOT"
+ jackson = "2.17.0"
+ fastutil = "8.5.2"
+ netty = "4.1.107.Final"
+-netty-io-uring = "0.0.25.Final-SNAPSHOT"
++netty-io-uring = "0.0.25.Final"
+ guava = "29.0-jre"
+ gson = "2.3.1" # Provided by Spigot 1.8.8
+ websocket = "1.5.1"
