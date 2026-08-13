@@ -235,8 +235,9 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
                     String geoName = "geometry." + (namespace.equals(Key.MINECRAFT_NAMESPACE) ? "" : namespace + ".") + geoKey;
 
                     if (emptyModels.contains(key.toString())) {
-                        context.logger().warn("Missing block model for block {}", blockLocation);
-                        geoName = "geometry." + Constants.MOD_ID + ".empty";
+                        // No model elements (e.g. special render types like trophies) - fall back to a
+                        // full block shape instead of warning, so the block is still visible on Bedrock
+                        geoName = "minecraft:geometry.full_block";
                     }
 
                     componentsBuilder.geometry(GeometryComponent.builder()
@@ -310,7 +311,7 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
                             .faceDimming(true)
                             .ambientOcclusion(model.ambientOcclusion())
                             .build());
-                    context.logger().warn("Could not find material for block {}", key);
+                    context.logger().debug("Could not find material for block {}, using default texture", key);
                 }
 
                 // No properties exist on this state, so there's only one
@@ -465,7 +466,7 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
                 boolean result = true;
                 for (Condition condition : conditions) {
                     if (!(condition instanceof Condition.Match match)) {
-                        context.logger().warn("Non match condition found in {}", blockLocation);
+                        context.logger().debug("Non match condition found in {}, skipping selector", blockLocation);
                         continue;
                     }
 
