@@ -16,6 +16,7 @@ import org.geysermc.hydraulic.HydraulicImpl;
 import org.geysermc.hydraulic.pack.context.PackEventContext;
 import org.geysermc.hydraulic.pack.context.PackPostProcessContext;
 import org.geysermc.hydraulic.pack.context.PackPreProcessContext;
+import org.geysermc.hydraulic.util.PackUtil;
 import org.geysermc.hydraulic.pack.converter.CustomModelConverter;
 import org.geysermc.hydraulic.pack.modules.MetadataPackModule;
 import org.geysermc.hydraulic.platform.mod.ModInfo;
@@ -99,7 +100,12 @@ public class PackManager {
                         .stream()
                         .map(path -> {
                             try {
-                                return MinecraftResourcePackReader.minecraft().read(NioDirectoryFileTreeReader.read(path));
+                                Path readable = PackUtil.ensurePackMeta(path);
+                                // Mod roots can be either extracted directories (Fabric) or jar files (NeoForge)
+                                if (Files.isDirectory(readable)) {
+                                    return MinecraftResourcePackReader.minecraft().read(NioDirectoryFileTreeReader.read(readable));
+                                }
+                                return MinecraftResourcePackReader.minecraft().readFromZipFile(readable);
                             } catch (Exception e) {
                                 LOGGER.error("Failed to read resource pack from mod {} at path {}: {}", mod.id(), path, e.getMessage());
                                 return null;
@@ -195,7 +201,9 @@ public class PackManager {
 
         try {
             for (final Path root : mod.roots()) {
-                converter.input(root, false).convert();
+                // Mod roots can be either extracted directories (Fabric) or jar files (NeoForge)
+                final Path readable = PackUtil.ensurePackMeta(root);
+                converter.input(readable, !Files.isDirectory(readable)).convert();
             }
         } catch (IOException ex) {
             LOGGER.error("Failed to convert mod {} to pack", mod.id(), ex);
