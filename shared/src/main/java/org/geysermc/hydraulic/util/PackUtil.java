@@ -73,4 +73,26 @@ public class PackUtil {
         }
         return UUID.nameUUIDFromBytes(hos.hash().asBytes());
     }
+    public static String limitPathLength(String path, int maxLength) {
+        if (path.length() <= maxLength) {
+            return path;
+        }
+
+        final String prefix = "textures/";
+        final String hash = Integer.toHexString(path.hashCode()) + Integer.toHexString((path + "|hydraulic").hashCode());
+
+        String body = path;
+        String extension = "";
+        int dot = path.lastIndexOf('.');
+        if (dot > path.lastIndexOf('/')) {
+            extension = path.substring(dot);
+            body = path.substring(0, dot);
+        }
+
+        String fileName = body.substring(body.lastIndexOf('/') + 1);
+        String shortName = fileName.length() > 10 ? fileName.substring(0, 10) : fileName;
+
+        return prefix + hash + "/" + shortName + extension;
+    }
+
 }
