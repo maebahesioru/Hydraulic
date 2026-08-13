@@ -110,7 +110,9 @@ public class CreativeMappings {
                 List.of(BlockTags.LOGS)
             ), new CreativeMapping(ItemGroup.LOGS, CreativeCategory.NATURE));
 
-            // TODO Remove, these are added differently to bedrock https://wiki.bedrock.dev/visuals/retexturing-spawn-eggs.html
+            // Vanilla spawn eggs are re-textured via the vanilla pack; mod spawn eggs keep custom
+            // item registration (no vanilla texture to re-texture). See
+            // https://wiki.bedrock.dev/visuals/retexturing-spawn-eggs.html
             put(new CreativeMappingTarget(
                 List.of(SpawnEggItem.class),
                 List.of(),
@@ -251,7 +253,7 @@ public class CreativeMappings {
             ), new CreativeMapping(CreativeCategory.NATURE));
 
             put(new CreativeMappingTarget(
-                List.of(BowItem.class, ShearsItem.class), // TODO: Armor item class is now missing, would require components to check or a tag
+                List.of(BowItem.class, ShearsItem.class), // Armor is detected via DataComponents.EQUIPPABLE in getMapping()
                 List.of(),
                 List.of(),
                 List.of()
