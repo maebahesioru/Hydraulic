@@ -99,7 +99,7 @@ public class PackContext<T extends PackModule<T>> {
             locations = List.of();
         }
         return Lists.transform(locations, (k) -> {
-            return registry.get(k).get().value();
+            return registry.get(k);
         });
     }
 }

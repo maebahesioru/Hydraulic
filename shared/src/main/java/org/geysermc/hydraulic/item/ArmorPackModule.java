@@ -4,7 +4,6 @@ import com.google.auto.service.AutoService;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.equipment.ArmorType;
 import org.geysermc.hydraulic.ext.ArmorItemExt;
 import org.geysermc.hydraulic.pack.PackModule;
 import org.geysermc.hydraulic.pack.context.PackPostProcessContext;
@@ -58,7 +57,7 @@ public class ArmorPackModule extends PackModule<ArmorPackModule> {
         for (ArmorItem armorItem : armorItems) {
             ResourceLocation armorItemLocation = BuiltInRegistries.ITEM.getKey(armorItem);
 
-            ResourceLocation armorTextureLocation = ((ArmorItemExt) armorItem).material().assetId().location();
+            ResourceLocation armorTextureLocation = BuiltInRegistries.ARMOR_MATERIAL.getKey(armorItem.getMaterial().value());
 
             Attachables armorAttachable = new Attachables();
             armorAttachable.formatVersion("1.10.0");
@@ -80,17 +79,17 @@ public class ArmorPackModule extends PackModule<ArmorPackModule> {
 
             description.textures(new HashMap<>() {
                 {
-                    put("default", String.format(BEDROCK_ARMOR_TEXTURE_LOCATION, context.mod().id(), armorTextureLocation.getPath(), (((ArmorItemExt) armorItem).type() == ArmorType.LEGGINGS ? 2 : 1)));
+                    put("default", String.format(BEDROCK_ARMOR_TEXTURE_LOCATION, context.mod().id(), armorTextureLocation.getPath(), (((ArmorItemExt) armorItem).type() == ArmorItem.Type.LEGGINGS ? 2 : 1)));
                     put("enchanted", "textures/misc/enchanted_actor_glint");
                 }
             });
 
             String geometryType = "";
             switch (((ArmorItemExt) armorItem).type()) {
-                case ArmorType.HELMET -> geometryType = "helmet";
-                case ArmorType.CHESTPLATE -> geometryType = "chestplate";
-                case ArmorType.LEGGINGS -> geometryType = "leggings";
-                case ArmorType.BOOTS -> geometryType = "boots";
+                case ArmorItem.Type.HELMET -> geometryType = "helmet";
+                case ArmorItem.Type.CHESTPLATE -> geometryType = "chestplate";
+                case ArmorItem.Type.LEGGINGS -> geometryType = "leggings";
+                case ArmorItem.Type.BOOTS -> geometryType = "boots";
             }
 
             final String finalGeometryType = geometryType;

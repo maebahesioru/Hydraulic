@@ -1,9 +1,9 @@
 package org.geysermc.hydraulic.mixin.ext;
 
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.equipment.ArmorMaterial;
-import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.ArmorMaterial;
 import org.geysermc.hydraulic.ext.ArmorItemExt;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -14,32 +14,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ArmorItem.class)
 public class ArmorItemMixin implements ArmorItemExt {
     @Unique
-    private ArmorMaterial armorMaterial;
+    private Holder<ArmorMaterial> armorMaterial;
 
     @Unique
-    private ArmorType armorType;
+    private ArmorItem.Type armorType;
 
     @Inject(
             method = "<init>",
             at = @At("RETURN")
     )
-    private void onInitFinish(ArmorMaterial armorMaterial, ArmorType armorType, Item.Properties properties, CallbackInfo ci) {
+    private void onInitFinish(Holder<ArmorMaterial> armorMaterial, ArmorItem.Type armorType, Item.Properties properties, CallbackInfo ci) {
         this.armorMaterial = armorMaterial;
         this.armorType = armorType;
     }
 
     @Override
-    public ArmorMaterial material() {
+    public Holder<ArmorMaterial> material() {
         return armorMaterial;
     }
 
     @Override
-    public ArmorType type() {
+    public ArmorItem.Type type() {
         return armorType;
     }
 
     @Override
     public int protection() {
-        return armorMaterial.defense().get(armorType);
+        return armorMaterial.value().getDefense(armorType);
     }
 }

@@ -4,7 +4,7 @@ plugins {
 
 val platforms = setOf(
     projects.fabric,
-    //projects.neoforge,
+    projects.neoforge,
     projects.shared
 ).map { it.dependencyProject }
 
@@ -21,7 +21,7 @@ allprojects {
     }
 
     repositories {
-//        mavenLocal()
+        mavenLocal()
         mavenCentral()
 
         maven("https://repo.opencollab.dev/main")

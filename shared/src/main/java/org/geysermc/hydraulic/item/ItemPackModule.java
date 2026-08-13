@@ -15,6 +15,8 @@ import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.TieredItem;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ShearsItem;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.SwordItem;
@@ -178,13 +180,13 @@ public class ItemPackModule extends TexturePackModule<ItemPackModule> {
 
             if (item instanceof ArmorItem armorItem) {
                 customItemBuilder.protectionValue(((ArmorItemExt) armorItem).protection());
-                switch (armorItem.components().get(DataComponents.EQUIPPABLE).slot()) {
+                switch (armorItem.getEquipmentSlot()) {
                     case HEAD -> customItemBuilder.armorType("helmet").creativeGroup("itemGroup.name.helmet");
                     case CHEST -> customItemBuilder.armorType("chestplate").creativeGroup("itemGroup.name.chestplate");
                     case LEGS -> customItemBuilder.armorType("leggings").creativeGroup("itemGroup.name.leggings");
                     case FEET -> customItemBuilder.armorType("boots").creativeGroup("itemGroup.name.boots");
                 }
-            } else if (item.components().has(DataComponents.TOOL)) {
+            } else if (item instanceof TieredItem) {
                 customItemBuilder.displayHandheld(true); // So we hold the tool right
 
                 // TODO Support custom tiers
@@ -215,8 +217,8 @@ public class ItemPackModule extends TexturePackModule<ItemPackModule> {
                 // This fixes animations sometimes not showing
                 customItemBuilder.block(itemLocation.toString());
 
-                Optional<Holder.Reference<Block>> block = BuiltInRegistries.BLOCK.get(itemLocation);
-                CreativeMappings.setupBlock(block.get().value(), customItemBuilder);
+                Block block = BuiltInRegistries.BLOCK.get(itemLocation);
+                CreativeMappings.setupBlock(block, customItemBuilder);
             }
 
             event.register(customItemBuilder.build());

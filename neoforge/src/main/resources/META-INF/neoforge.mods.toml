@@ -19,6 +19,6 @@ config = "hydraulic.mixins.json"
 [[dependencies.hydraulic]]
     modId="minecraft"
     type="required"
-    versionRange="[1.20,1.21)"
+    versionRange="[1.21,1.22)"
     ordering="NONE"
     side="BOTH"
