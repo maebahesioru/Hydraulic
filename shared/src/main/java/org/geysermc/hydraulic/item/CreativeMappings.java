@@ -257,13 +257,6 @@ public class CreativeMappings {
             ), new CreativeMapping(CreativeCategory.EQUIPMENT));
 
             put(new CreativeMappingTarget(
-                List.of(RecordItem.class),
-                List.of(),
-                List.of(),
-                List.of()
-            ), new CreativeMapping(ItemGroup.RECORDS, CreativeCategory.ITEMS));
-
-            put(new CreativeMappingTarget(
                 List.of(Item.class),
                 List.of(),
                 List.of(Block.class),
