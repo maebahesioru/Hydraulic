@@ -28,6 +28,7 @@ public class YouerGeyserBridge {
     private static final Logger LOGGER = LoggerFactory.getLogger("Hydraulic/YouerBridge");
 
     private static volatile boolean customBlocksRegistered = false;
+    private static volatile boolean hookFailureLogged = false;
 
     /**
      * Attempts to locate the plugin-based Geyser on the server (Youer/Paper-like
@@ -87,10 +88,13 @@ public class YouerGeyserBridge {
             if (listener == null) {
                 return false; // pack manager not initialized yet (before ServerStarting) - retry
             }
-            listener.convertAll(packsPath);
+            boolean converted = listener.convertAll(packsPath);
 
             if (hydraulic.server() == null) {
                 return false; // server not ready yet - retry (reload needs the main thread)
+            }
+            if (!converted) {
+                return true; // packs already exist from a previous boot - Geyser read them at startup, no reload needed
             }
             LOGGER.info("Youer bridge: reloading Geyser to pick up packs...");
             // dispatch must run on the server main thread
@@ -177,9 +181,14 @@ public class YouerGeyserBridge {
 
             subscribe.invoke(eventBus, owner, eventClass, consumer);
             customBlocksRegistered = true;
+            hookFailureLogged = false;
             LOGGER.info("Youer bridge: subscribed to GeyserDefineCustomBlocksEvent");
         } catch (Throwable t) {
-            LOGGER.warn("Youer bridge: failed to hook custom block registration", t);
+            // During startup polling the event bus may not be ready yet - log only once
+            if (!hookFailureLogged) {
+                hookFailureLogged = true;
+                LOGGER.debug("Youer bridge: custom block hook not ready yet ({})", t.getMessage());
+            }
         }
     }
 

@@ -56,7 +56,8 @@ public class PackManager {
             "geyser-fabric",
             "geyser-forge",
             "floodgate",
-            "mixinextras"
+            "mixinextras",
+            "hydraulic" // Hydraulic's own pack is an empty placeholder - never convert it
     );
 
     private final HydraulicImpl hydraulic;
