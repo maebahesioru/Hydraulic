@@ -1,5 +1,6 @@
 package org.geysermc.hydraulic.item;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.BlockItemTags;
 import net.minecraft.tags.ItemTags;
@@ -299,6 +300,12 @@ public class CreativeMappings {
     private static CreativeMapping getMapping(Item item) {
         Class<? extends Item> itemClass = item.getClass();
         ItemStack itemStack = item.getDefaultInstance();
+
+        // Armor items no longer have a common superclass in 26.2, so detect them by component.
+        // This must run before the generic Item.class fallback below.
+        if (item.components().has(DataComponents.EQUIPPABLE)) {
+            return new CreativeMapping(CreativeCategory.EQUIPMENT);
+        }
 
         for (Map.Entry<CreativeMappingTarget, CreativeMapping> entry : CREATIVE_MAPPINGS.entrySet()) {
             CreativeMappingTarget target = entry.getKey();
