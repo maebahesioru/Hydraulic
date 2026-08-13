@@ -262,7 +262,7 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
 
                 Materials materials = context.storage().materials();
                 Materials.Material material = materials.material(key.toString());
-                if (material != null) {
+                if (material != null && !material.textures().isEmpty()) {
                     // Add a default texture, can be replaced by the below (I think)
                     Map.Entry<String, String> firstEntry = material.textures().entrySet().iterator().next();
                     componentsBuilder.materialInstance("*", MaterialInstance.builder()
@@ -345,7 +345,7 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
             CustomBlockComponents.Builder componentsBuilder = baseComponentBuilder
                     .displayName("%" + block.getDescriptionId())
                     .friction(Math.min(1 - block.getFriction(), 0.9f))
-                    .destructibleByMining(block.defaultDestroyTime()) // TODO: Check
+                    .destructibleByMining(Math.max(0, block.defaultDestroyTime())) // Geyser 2.4.4 requires non-negative (unbreakable blocks = -1)
                     // .unitCube(true) // TODO: Geometry conversion
                     .selectionBox(createBoxComponent(shape))
                     .collisionBox(createBoxComponent(collisionShape));
