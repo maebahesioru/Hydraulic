@@ -66,15 +66,27 @@ import team.unnamed.creative.texture.Texture;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @AutoService(PackModule.class)
 public class BlockPackModule extends ConvertablePackModule<BlockPackModule, ModelConversionData> {
     private static final String STATE_CONDITION = "query.block_property('%s') == %s";
+    // Patch (backport/1.21.1-youer): NeoForge 1.21.1's dynamic registry IDs (39k-42k) overflow
+    // Geyser 2.5.1's fixed 27319-size block state list. Assign sequential Java IDs starting
+    // after the last vanilla block state instead of using Block.getId() directly.
+    private static final AtomicInteger NEXT_JAVA_ID = new AtomicInteger(27319);
+
+    // Patch (backport/1.21.1-youer): dump real registry IDs for ViaProxy-side re-registration
+    private static final List<Map<String, Object>> DUMP_BLOCKS = new ArrayList<>();
 
     private final Map<String, StateDefinition> blockStates = new HashMap<>();
     private final Set<String> emptyModels = new HashSet<>();
@@ -386,7 +398,7 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
                 CustomBlockState customBlockState = stateBuilder.build();
                 JavaBlockState.Builder javaBlockStateBuilder = JavaBlockState.builder()
                         .identifier(BlockStateParser.serialize(state))
-                        .javaId(Block.getId(state))
+                        .javaId(NEXT_JAVA_ID.getAndIncrement())
                         .blockHardness(block.defaultDestroyTime()) // TODO: Check
                         .hasBlockEntity(state.hasBlockEntity())
                         .waterlogged(state.hasProperty(BlockStateProperties.WATERLOGGED) && state.getValue(BlockStateProperties.WATERLOGGED))
@@ -418,7 +430,47 @@ public class BlockPackModule extends ConvertablePackModule<BlockPackModule, Mode
                  */
                 javaBlockStateBuilder.collision(new JavaBoundingBox[0]); // TODO
 
+                // Patch (backport/1.21.1-youer): collect dump entry with real registry id
+                Map<String, Object> dumpEntry = new LinkedHashMap<>();
+                dumpEntry.put("identifier", BlockStateParser.serialize(state));
+                dumpEntry.put("javaId", Block.getId(state));
+                dumpEntry.put("name", blockLocation.getPath());
+                dumpEntry.put("stateGroupId", blockId);
+                dumpEntry.put("blockHardness", block.defaultDestroyTime());
+                dumpEntry.put("hasBlockEntity", state.hasBlockEntity());
+                dumpEntry.put("waterlogged", state.hasProperty(BlockStateProperties.WATERLOGGED) && state.getValue(BlockStateProperties.WATERLOGGED));
+                dumpEntry.put("pistonBehavior", pistonBehavior.name());
+                List<Map<String, Object>> props = new ArrayList<>();
+                for (Property<?> property : block.getStateDefinition().getProperties()) {
+                    Map<String, Object> p = new LinkedHashMap<>();
+                    p.put("name", property.getName());
+                    if (property instanceof IntegerProperty intProp) {
+                        p.put("type", "int");
+                        p.put("values", List.copyOf(intProp.getPossibleValues()));
+                    } else if (property instanceof BooleanProperty) {
+                        p.put("type", "boolean");
+                    } else if (property instanceof EnumProperty<?> enumProp) {
+                        p.put("type", "string");
+                        p.put("values", enumProp.getPossibleValues().stream().map(StringRepresentable::getSerializedName).toList());
+                    }
+                    props.add(p);
+                }
+                dumpEntry.put("properties", props);
+                DUMP_BLOCKS.add(dumpEntry);
+
                 event.registerOverride(javaBlockStateBuilder.build(), customBlockState);
+            }
+        }
+
+        // Patch (backport/1.21.1-youer): write dump file
+        if (!DUMP_BLOCKS.isEmpty()) {
+            try {
+                Path dumpFile = Path.of("config", "hydraulic", "dumps", "blocks.json");
+                Files.createDirectories(dumpFile.getParent());
+                Files.writeString(dumpFile, new com.google.gson.Gson().toJson(DUMP_BLOCKS));
+                context.logger().info("Dumped {} block states to {}", DUMP_BLOCKS.size(), dumpFile.toAbsolutePath());
+            } catch (IOException e) {
+                context.logger().warn("Failed to write blocks dump: {}", e.getMessage());
             }
         }
     }

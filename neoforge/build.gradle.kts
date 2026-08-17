@@ -42,10 +42,14 @@ dependencies {
     compileOnly(libs.geyser.api)
 
     shadow(project(path = ":shared", configuration = "transformProductionNeoForge")) { isTransitive = false }
-    shadow(libs.geyser.api) { isTransitive = false } // bundle Geyser API only (no transitive deps)
-    shadow("org.geysermc.api:base-api:1.0.3") { isTransitive = false } // Geyser 2.11 API dependency (org.geysermc.api)
-    shadow("org.geysermc.event:events:1.1-SNAPSHOT") { isTransitive = false } // Geyser 2.11 event bus
-    shadow("org.lanternpowered:lmbda:2.0.0") { isTransitive = false } // LambdaFactory (was provided by Geyser mod)
+    // JiJ (jar-in-jar) instead of shadow: NeoForge deduplicates identical JiJ jars
+    // across mods, so Floodgate and Hydraulic can share events/lmbda/etc.
+    include(libs.geyser.api)
+    include("org.geysermc.api:base-api:1.0.3") // Geyser 2.11 API dependency (org.geysermc.api)
+    include("org.geysermc.event:events:1.1-SNAPSHOT") // Geyser 2.11 event bus
+    include("org.lanternpowered:lmbda:2.0.0") // LambdaFactory (was provided by Geyser mod)
+    include("org.cloudburstmc.math:immutable:2.0") // Vector3f etc. for GeyserEntityDataTypes
+    include("org.geysermc.cumulus:cumulus:1.1.2-SNAPSHOT") // shared with Floodgate (forms API)
 
     // TODO fix neoforge runServer task
     modRuntimeOnly(libs.pack.converter)
